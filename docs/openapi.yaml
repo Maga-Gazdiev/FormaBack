@@ -1,0 +1,85 @@
+openapi: 3.0.3
+info:
+  title: Forma Conversion API
+  version: 1.0.0
+  description: Standalone file conversion service. Supported routes depend on installed converters.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/health:
+    get:
+      summary: API liveness
+      responses:
+        '200':
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+  /api/formats:
+    get:
+      summary: Available formats and limits
+      responses:
+        '200':
+          description: Installed conversion routes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  maxFileSize: { type: integer, format: int64, example: 52428800 }
+                  conversionTimeoutSeconds: { type: integer, example: 120 }
+                  formats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        from: { type: string, example: pdf }
+                        to:
+                          type: array
+                          items: { type: string }
+                          example: [png, jpg]
+                        group: { type: string, example: PDF }
+  /api/convert:
+    post:
+      summary: Convert a file and download the result
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, format]
+              properties:
+                file: { type: string, format: binary }
+                format: { type: string, example: png }
+      responses:
+        '200':
+          description: Converted file; multipage PDF image results are ZIP archives
+          headers:
+            Content-Disposition:
+              schema: { type: string }
+              description: Attachment filename, including UTF-8 filenames
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '405': { $ref: '#/components/responses/Error' }
+        '413': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+        '500': { $ref: '#/components/responses/Error' }
+components:
+  responses:
+    Error:
+      description: Invalid input, denied origin, busy service, or conversion failure
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: { type: string }
