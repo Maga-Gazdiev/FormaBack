@@ -13,5 +13,7 @@ var (
 	ErrUnsupported = errors.New("unsupported conversion")
 	ErrTooLarge    = errors.New("file too large")
 	ErrInvalid     = errors.New("invalid file")
+	ErrNoAudio     = errors.New("no audio stream")
+	ErrNoMedia     = errors.New("no audio or video streams")
 	ErrConversion  = errors.New("conversion failed")
 )

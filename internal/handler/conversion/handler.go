@@ -1,6 +1,7 @@
 package conversion
 
 import (
+	"context"
 	"converter/internal/model"
 	service "converter/internal/service/conversion"
 	"encoding/json"
@@ -96,6 +97,15 @@ func (h *Handler) Convert(w http.ResponseWriter, r *http.Request) {
 			writeError(w, 413, "Файл превышает допустимый размер")
 		case errors.Is(err, model.ErrInvalid):
 			writeError(w, 400, "Файл пуст или некорректен")
+		case errors.Is(err, model.ErrNoAudio):
+			writeError(w, 422, "В файле нет аудиодорожки. Извлечь MP3 из видео без звука невозможно.")
+		case errors.Is(err, model.ErrNoMedia):
+			writeError(w, 422, "В файле не найдены видео- или аудиодорожки.")
+		case errors.Is(err, context.DeadlineExceeded):
+			slog.Warn("conversion timed out", "error", err)
+			writeError(w, 422, fmt.Sprintf("Конвертация не успела завершиться за %d секунд. Попробуйте более короткое видео или увеличьте лимит времени обработки на сервере.", int(h.service.Timeout().Seconds())))
+		case errors.Is(err, context.Canceled):
+			return
 		case errors.Is(err, model.ErrConversion):
 			slog.Warn("conversion failed", "error", err)
 			writeError(w, 422, "Не удалось преобразовать файл. Он может быть повреждён, защищён паролем или слишком сложным.")

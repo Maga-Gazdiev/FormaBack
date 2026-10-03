@@ -69,7 +69,7 @@ func (s *Service) Convert(ctx context.Context, name, target string, reader io.Re
 	defer cancel()
 	output := filepath.Join(workspace.Dir, "result."+target)
 	if err = s.converter.Convert(ctx, engine, input, output, from, target, workspace.Dir); err != nil {
-		return nil, fmt.Errorf("%w: %s -> %s: %v", model.ErrConversion, from, target, err)
+		return nil, fmt.Errorf("%w: %s -> %s: %w", model.ErrConversion, from, target, err)
 	}
 	filename := strings.TrimSuffix(filepath.Base(name), filepath.Ext(name)) + "." + target
 	if _, zipErr := os.Stat(output + ".zip"); zipErr == nil {

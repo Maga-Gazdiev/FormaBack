@@ -31,6 +31,9 @@ func command(ctx context.Context, name string, args ...string) error {
 	cmd.Stdout = &logs
 	cmd.Stderr = &logs
 	if err := cmd.Run(); err != nil {
+		if ctx.Err() != nil {
+			return fmt.Errorf("%s: %w", name, ctx.Err())
+		}
 		return fmt.Errorf("%s: %w: %.2000s", name, err, logs.String())
 	}
 	return nil
@@ -200,7 +203,7 @@ func (r *Runner) Convert(ctx context.Context, engine, input, output, from, to, d
 		}
 		return z.Close()
 	case "ffmpeg":
-		return command(ctx, "ffmpeg", "-nostdin", "-v", "error", "-y", "-protocol_whitelist", "file,pipe", "-i", input, "-threads", "2", output)
+		return convertMedia(ctx, input, output, to)
 	}
 	return errors.New("unsupported conversion")
 }
